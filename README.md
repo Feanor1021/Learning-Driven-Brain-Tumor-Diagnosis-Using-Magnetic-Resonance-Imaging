@@ -43,16 +43,7 @@ import kagglehub
 kagglehub.dataset_download("masoudnickparvar/brain-tumor-mri-dataset")
 ```
 
----
 
-## ▶️ Usage
-
-### Train a model:
-```bash
-python train.py --model svm
-python train.py --model simplecnn
-python train.py --model deepcnn
-```
 
 ---
 
