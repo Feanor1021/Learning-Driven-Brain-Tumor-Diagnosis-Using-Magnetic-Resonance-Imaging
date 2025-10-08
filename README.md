@@ -1,174 +1,112 @@
 # 🧠 Learning-Driven Brain Tumor Diagnosis Using Magnetic Resonance Imaging
 
 ## 📖 Introduction
-Brain tumor detection from MRI is a critical yet time-consuming process requiring expert radiologists.  
-This project explores **machine learning (ML)** and **deep learning (DL)** models for **automated brain tumor classification**.
+Brain tumor detection from MRI is a critical, expert-driven task. This project applies machine learning and deep learning techniques to classify axial T1-weighted contrast-enhanced brain MRI slices into one of four categories:
+- `no_tumor`
+- `pituitary`
+- `meningioma`
+- `glioma`
 
-Each MRI slice is categorized into one of four classes:
-- 🧩 `no_tumor`
-- 🧩 `pituitary`
-- 🧩 `meningioma`
-- 🧩 `glioma`
-
-We compare traditional and deep approaches:  
-➡️ **SVM (RBF + PCA)** — classical ML baseline  
-➡️ **SimpleCNN** — lightweight CNN  
-➡️ **DeepCNN** — deeper convolutional architecture with best performance
-
----
-
-## 🗂️ Table of Contents
-- [Introduction](#-introduction)
-- [Dataset](#-dataset)
-- [Installation](#️-installation)
-- [Usage](#️-usage)
-- [Models](#-models)
-- [Results](#-results)
-- [Examples](#-examples)
-- [Limitations & Future Work](#-limitations--future-work)
-- [Contributors](#-contributors)
-- [License](#-license)
+Three models are compared:
+- 📌 **SVM (RBF + PCA)**
+- 📌 **SimpleCNN**
+- 📌 **DeepCNN** (final model with best performance)
 
 ---
 
 ## 📊 Dataset
-**Dataset**: [Brain Tumor MRI Dataset (Kaggle)](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset)  
-**Author**: Masoud Nickparvar  
-**Total Images**: 7,023 axial MRI slices  
-**Classes**: `no_tumor`, `pituitary`, `meningioma`, `glioma`
 
-### Processing
-- Original *Training* and *Testing* folders merged  
-- New **80/20 stratified split** created (to preserve class proportions)  
-- Images resized to **200×200**, grayscale normalized to `[0,1]`  
-- Pixel histograms inspected (strong right skew due to dark background)  
+- **Source**: [Kaggle - Brain Tumor MRI Dataset](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset)
+- **Total Images**: 7,023
+- **Classes**: 4
+- **Format**: Grayscale axial slices, resized to 200×200
+- **Split**: Custom stratified 80/20 split from merged Training and Testing folders
 
 ---
 
 ## ⚙️ Installation
 
-### 1️⃣ Clone Repository
+### 🔹 Clone Repository
 ```bash
 git clone https://github.com/yourusername/brain-tumor-diagnosis.git
 cd brain-tumor-diagnosis
-2️⃣ Install Dependencies
-bash
-Kodu kopyala
-pip install -r requirements.txt
-3️⃣ Download Dataset
-python
-Kodu kopyala
-import kagglehub
-path = kagglehub.dataset_download("masoudnickparvar/brain-tumor-mri-dataset")
-print(path)
-Or manually place dataset in ./data/brain_tumor_mri_dataset/.
+```
 
-▶️ Usage
-🧩 Train Models
-bash
-Kodu kopyala
+### 🔹 Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 🔹 Download Dataset
+```python
+import kagglehub
+kagglehub.dataset_download("masoudnickparvar/brain-tumor-mri-dataset")
+```
+
+---
+
+## ▶️ Usage
+
+### Train a model:
+```bash
 python train.py --model svm
 python train.py --model simplecnn
 python train.py --model deepcnn
-🧾 Evaluate Performance
-After training, metrics such as accuracy, F1-score, and confusion matrices will be generated automatically.
+```
 
-🧠 Models
-🔹 SVM (RBF + PCA)
-Flattened 200×200 images → PCA (retain 98% variance)
+---
 
-StandardScaler applied on training PCA features
+## 🧠 Models
 
-RBF kernel SVM (C=10, gamma=scale)
+### ✅ SVM (RBF + PCA)
+- Preprocessing: flatten → PCA (98% variance) → StandardScaler
+- Model: SVC with RBF kernel
+- Loss: Hinge loss (1-vs-1)
 
-Loss: hinge loss
+### ✅ SimpleCNN
+- Conv → ReLU → MaxPool → Dropout (×3)
+- GlobalAvgPool → Dense(128) → Dropout → Softmax
 
-Library: scikit-learn
+### ✅ DeepCNN
+- 5 Conv blocks: (32 → 512 filters)
+- BatchNorm + MaxPool + Dropout
+- GlobalAvgPool → Dense(512) → Dropout → Softmax
+- Optimizer: Adam with ReduceLROnPlateau and early stopping
 
-🔹 SimpleCNN
-3× Conv-ReLU + MaxPooling blocks
+---
 
-Global Average Pooling → Dense(128) → Dropout → Softmax
+## 📈 Results
 
-Regularization: BatchNorm, Dropout
+| Model                 | Accuracy | Balanced Acc | F1 Macro |
+|----------------------|----------|---------------|----------|
+| 🧠 **DeepCNN**        | **97.8%** | **97.7%**     | **97.7%** |
+| 📦 SimpleCNN          | 90.2%    | 89.7%         | 89.6%    |
+| ⚙️ SVM (RBF + PCA98%) | 84.9%    | 84.6%         | 84.5%    |
 
-Optimizer: Adam (lr=1e-3), Loss: Categorical Cross-Entropy
+- DeepCNN outperforms both SVM and SimpleCNN by a large margin.
+- Most confusion occurs between `meningioma` and `glioma`.
 
-🔹 DeepCNN
-5× Conv blocks (filters: 32 → 512)
+---
 
-Double Conv per block + BatchNorm + MaxPooling
+## ⚠️ Limitations & Future Work
 
-GAP → Dense(512) → Dropout → Softmax
+### Limitations:
+- Slice-wise classification (no 3D volume context)
+- No subject-wise or cross-center validation
+- Single test split, not cross-validated
 
-Scheduler: ReduceLROnPlateau
+### Future directions:
+- 2.5D / 3D CNNs
+- Patient-level aggregation
+- External datasets
+- Probability calibration (Platt scaling)
+- Deployment with real-time inference
 
-Early stopping on validation loss
+---
 
-Optimizer: Adam (lr=1e-3)
+## 📚 References
 
-📈 Results
-Model	Accuracy	Balanced Acc	Precision (Macro)	Recall (Macro)	F1 (Macro)
-🧠 DeepCNN	0.9779	0.9770	0.9770	0.9770	0.9770
-🧩 SimpleCNN	0.9025	0.8971	0.9005	0.8971	0.8964
-⚙️ SVM (RBF + PCA98%)	0.8498	0.8463	0.8514	0.8463	0.8456
-
-✅ Key Findings
-DeepCNN achieved 97.8% accuracy, outperforming both baselines
-
-Most confusion between meningioma and glioma classes
-
-Deep learning clearly surpasses classical ML with end-to-end learned features
-
-🖼️ Examples
-Sample MRI slices: Shown per class (visual inspection)
-
-Pixel intensity histograms: Show mid-intensity overlap between tumors
-
-PCA plots: 2D separation reveals class clusters
-
-Confusion matrices: DeepCNN has near-diagonal performance
-
-(Figures available in /assets/ folder of the full repository)
-
-⚠️ Limitations & Future Work
-Slice-based analysis (no 3D context)
-
-Merged dataset (not subject-wise split)
-
-Single hold-out test → Potential optimistic bias
-
-🔮 Future Work
-Subject-level & multi-center validation
-
-MRI-specific intensity normalization
-
-2.5D / 3D CNN architectures
-
-Calibrated probability outputs (Platt scaling)
-
-ROC / PR curve analysis for clinical decision thresholds
-
-Model compression for real-time inference
-
-👨‍💻 Contributors
-Furkan Yardımcı — Data Preparation, Model Development, Report Writing
-
-📄 License
-This project is released under the MIT License.
-See LICENSE for more information.
-
-🔗 References
-SEER Cancer Stats (2025)
-
-CBTRUS Report (2024)
-
-GLOBOCAN (2022)
-
-Khalighi et al., npj Precision Oncology (2024)
-
-Al-Rahbi et al., EJNPNS (2025)
-
-Masoud Nickparvar — Kaggle Dataset
-
-Kingma & Ba (2015), Adam Optimizer
+- SEER, CBTRUS, GLOBOCAN cancer statistics
+- Khalighi et al. (2024), Al-Rahbi et al. (2025)
+- Kingma & Ba — *Adam Optimizer*
+- Dataset by Masoud Nickparvar (Kaggle)
